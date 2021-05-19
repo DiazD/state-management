@@ -33,14 +33,9 @@ export const dispatch = (event) => {
 
 const singlePath = (paths) => !Array.isArray(paths[0]);
 
-export const useQuery = (paths_, transformationFn = (...x) => x) => {
-  // normalize paths
-  const paths = singlePath(paths_) ? [paths_] : paths_;
-
-  // init state -- fetch values from state
+const useGetPathValue = (paths) => {
   const init = paths.map(path => getIn(path, state));
   const [data, setData] = useState(init);
-
   // filter function to only update state if the incoming change from
   // the stream matches a path we're watching via `paths` AND the
   // incoming value isn't the same as the old value
@@ -52,7 +47,6 @@ export const useQuery = (paths_, transformationFn = (...x) => x) => {
     return pathMatched !== -1 && partial !== value;
   }
 
-  // subscribe to the store
   useEffect(() => {
     const subscription = subject$
       .pipe(filter(filterBy))
@@ -65,19 +59,21 @@ export const useQuery = (paths_, transformationFn = (...x) => x) => {
           const newData = [...data];
           newData[idx] = value;
 
-          // transform the data and decide whether to wrap it into an array or not
-          const transformedData = transformationFn(...newData);
-          const newState = !Array.isArray(transformedData) ? [transformedData] : transformedData;
-
-          return newState
+          return newData;
         });
       })
-    return () => {
-      console.log("PATHS", paths);
-      subscription.unsubscribe();
-    }
+    return () => subscription.unsubscribe();
     // eslint-disable-next-line
-  }, [paths_]);
+  }, [paths]);
 
   return data;
+};
+
+export const useQuery = (paths_, transformationFn = (...x) => x) => {
+  // normalize paths
+  const isSinglePath = singlePath(paths_);
+  const paths = isSinglePath ? [paths_] : paths_;
+
+  const values = useGetPathValue(paths);
+  return transformationFn(...values);
 };

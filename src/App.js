@@ -10,8 +10,12 @@ const paths = [
   ["list", "counter"],
 ];
 
+const counterPath = ["list", "counter"];
+
 function App() {
-  const [multiplier, counter] = useQuery(paths);
+  // const [multiplier, counter] = useQuery(paths);
+  const vals = useQuery(paths, (multiplier, counter) => multiplier * counter)
+  const [counter] = useQuery(counterPath);
   const [user] = useQuery(["users", counter]);
 
   const addNewUser = () => {
@@ -25,16 +29,18 @@ function App() {
       args: user
     })
   };
+
   return (
     <div className="App">
       {user ? <h1>{user.name}</h1> : null}
+      <h4>{vals}</h4>
       <button onClick={addNewUser}>Add User</button>
       <div>
-        {multiplier}
+        multiplier
         <button onClick={incEvent(["list", "multiplier"])}>+</button>
       </div>
       <div>
-        {counter * multiplier}
+        counter
         <button onClick={incEvent(["list", "counter"])}>+</button>
       </div>
     </div >
