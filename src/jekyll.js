@@ -72,9 +72,12 @@ export const useQuery = (paths_, transformationFn = (...x) => x) => {
           return newState
         });
       })
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("PATHS", paths);
+      subscription.unsubscribe();
+    }
     // eslint-disable-next-line
-  }, [paths]);
+  }, [paths_]);
 
   return data;
 };

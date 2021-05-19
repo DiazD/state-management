@@ -5,13 +5,13 @@ import { dispatch, useQuery } from "./jekyll";
 const inc = (value) => value + 1;
 const incEvent = (path) => () => dispatch({ path, updateFn: inc });
 
+const paths = [
+  ["list", "multiplier"],
+  ["list", "counter"],
+];
+
 function App() {
-  const [multiplier, counter] = useQuery(
-    [
-      ["list", "multiplier"],
-      ["list", "counter"],
-    ]
-  );
+  const [multiplier, counter] = useQuery(paths);
   const [user] = useQuery(["users", counter]);
 
   const addNewUser = () => {
