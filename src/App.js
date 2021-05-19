@@ -1,24 +1,43 @@
-import logo from './logo.svg';
 import './App.css';
 
+import { dispatch, useQuery } from "./jekyll";
+
+const inc = (value) => value + 1;
+const incEvent = (path) => () => dispatch({ path, updateFn: inc });
+
 function App() {
+  const [multiplier, counter] = useQuery(
+    [
+      ["list", "multiplier"],
+      ["list", "counter"],
+    ]
+  );
+  const [user] = useQuery(["users", counter]);
+
+  const addNewUser = () => {
+    const user = {
+      id: counter,
+      name: `john-${counter}`,
+    }
+    dispatch({
+      path: ["users", counter],
+      updateFn: (_, newUser) => newUser,
+      args: user
+    })
+  };
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      {user ? <h1>{user.name}</h1> : null}
+      <button onClick={addNewUser}>Add User</button>
+      <div>
+        {multiplier}
+        <button onClick={incEvent(["list", "multiplier"])}>+</button>
+      </div>
+      <div>
+        {counter * multiplier}
+        <button onClick={incEvent(["list", "counter"])}>+</button>
+      </div>
+    </div >
   );
 }
 
