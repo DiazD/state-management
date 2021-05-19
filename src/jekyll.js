@@ -4,7 +4,7 @@ import { filter } from "rxjs/operators";
 
 import { updateIn, getIn, arrayEQ, all, any } from "./operators";
 
-let state = {
+export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
 };

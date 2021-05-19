@@ -1,6 +1,6 @@
 import './App.css';
 
-import { dispatch, useQuery } from "./jekyll";
+import { dispatch, useQuery, state } from "./jekyll";
 
 const inc = (value) => value + 1;
 const incEvent = (path) => () => dispatch({ path, updateFn: inc });
@@ -11,6 +11,14 @@ const paths = [
 ];
 
 const counterPath = ["list", "counter"];
+
+const style = {
+  textAlign: "left",
+  backgroundColor: "lightgray",
+  padding: "2rem",
+  margin: "2rem",
+  borderRadius: "20px",
+}
 
 function App() {
   // const [multiplier, counter] = useQuery(paths);
@@ -43,6 +51,11 @@ function App() {
         counter
         <button onClick={incEvent(["list", "counter"])}>+</button>
       </div>
+      <pre style={style}>
+        <code>
+          {JSON.stringify(state, null, 2)}
+        </code>
+      </pre>
     </div >
   );
 }
