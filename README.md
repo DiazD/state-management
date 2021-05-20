@@ -55,5 +55,11 @@ const myUpdateFn = (currentStatePointedByPath, args) => newValueToStoreInPath;
 // lets update the counter
 const inc = (currentValue) => currentValue + 1;
 dispatch({ path: ["list", "counter"], updateFn: inc });
+
+// or with an argument
+const incByFactor = (currentValue, factor) => currentValue + factor;
+dispatch({ path: ["list", "counter"], updateFn: incByFactor, args: 10});
 ```
 
+**currentValue:** is the value that's pointed by `path`
+**factor:** is the value specified by `args`
