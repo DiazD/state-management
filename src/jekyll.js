@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 
-import { updateIn, getIn, arrayEQ, all, any } from "./operators";
+import { updateIn, getIn, arrayEQ } from "./operators";
 
 export let state = {
   list: { counter: 0, multiplier: 1 },

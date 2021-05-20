@@ -21,7 +21,6 @@ const style = {
 }
 
 function App() {
-  // const [multiplier, counter] = useQuery(paths);
   const vals = useQuery(paths, (multiplier, counter) => multiplier * counter)
   const [counter] = useQuery(counterPath);
   const [user] = useQuery(["users", counter]);
@@ -38,11 +37,14 @@ function App() {
     })
   };
 
+  const resetUsers = () => dispatch({ path: ["users"], updateFn: () => ({}) });
+
   return (
     <div className="App">
       {user ? <h1>{user.name}</h1> : null}
       <h4>{vals}</h4>
       <button onClick={addNewUser}>Add User</button>
+      <button onClick={resetUsers}>Reset Users</button>
       <div>
         multiplier
         <button onClick={incEvent(["list", "multiplier"])}>+</button>
