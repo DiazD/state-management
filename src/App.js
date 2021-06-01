@@ -1,9 +1,9 @@
 import './App.css';
 
-import { dispatch, useQuery, state } from "./jekyll";
+import { dispatch, useSubscription, state } from "./jekyll";
 
 const inc = (value) => value + 1;
-const incEvent = (path) => () => dispatch({ path, updateFn: inc });
+const incEvent = (event) => () => dispatch([event]);
 
 const paths = [
   ["list", "multiplier"],
@@ -21,23 +21,19 @@ const style = {
 }
 
 function App() {
-  const vals = useQuery(paths, (multiplier, counter) => multiplier * counter)
-  const [counter] = useQuery(counterPath);
-  const [user] = useQuery(["users", counter]);
+  const vals = useSubscription(paths, (multiplier, counter) => multiplier * counter)
+  const [counter] = useSubscription(counterPath);
+  const [user] = useSubscription(["users", counter]);
 
   const addNewUser = () => {
     const user = {
       id: counter,
       name: `john-${counter}`,
     }
-    dispatch({
-      path: ["users", counter],
-      updateFn: (_, newUser) => newUser,
-      args: user
-    })
+    dispatch(["add_user", { counter, user }])
   };
 
-  const resetUsers = () => dispatch({ path: ["users"], updateFn: () => ({}) });
+  const resetUsers = () => dispatch(["reset_users"]);
 
   return (
     <div className="App">
@@ -47,11 +43,11 @@ function App() {
       <button onClick={resetUsers}>Reset Users</button>
       <div>
         multiplier
-        <button onClick={incEvent(["list", "multiplier"])}>+</button>
+        <button onClick={incEvent("inc_multiplier")}>+</button>
       </div>
       <div>
         counter
-        <button onClick={incEvent(["list", "counter"])}>+</button>
+        <button onClick={incEvent("inc_counter")}>+</button>
       </div>
       <pre style={style}>
         <code>
