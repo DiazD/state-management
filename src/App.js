@@ -2,15 +2,13 @@ import './App.css';
 
 import { dispatch, useSubscription, state } from "./jekyll";
 
-const inc = (value) => value + 1;
 const incEvent = (event) => () => dispatch([event]);
 
+const counterPath = ["list", "counter"];
 const paths = [
   ["list", "multiplier"],
-  ["list", "counter"],
+  counterPath,
 ];
-
-const counterPath = ["list", "counter"];
 
 const style = {
   textAlign: "left",
@@ -18,42 +16,61 @@ const style = {
   padding: "2rem",
   margin: "2rem",
   borderRadius: "20px",
-}
+};
 
-function App() {
-  const vals = useSubscription(paths, (multiplier, counter) => multiplier * counter)
+const addNewUser = () => dispatch(["add_user"]);
+const resetUsers = () => dispatch(["reset_users"]);
+
+const Counter = () => {
   const [counter] = useSubscription(counterPath);
-  const [user] = useSubscription(["users", counter]);
-
-  const addNewUser = () => {
-    const user = {
-      id: counter,
-      name: `john-${counter}`,
-    }
-    dispatch(["add_user", { counter, user }])
-  };
-
-  const resetUsers = () => dispatch(["reset_users"]);
 
   return (
-    <div className="App">
+    <div>{counter}</div>
+  );
+}
+
+const Header = () => {
+  const vals = useSubscription(paths, (multiplier, counter) => multiplier * counter)
+  const [counter] = useSubscription(counterPath);
+
+  const [user] = useSubscription(["users", counter]);
+  return (
+    <div>
       {user ? <h1>{user.name}</h1> : null}
       <h4>{vals}</h4>
+    </div>
+  )
+};
+
+const Store = () => {
+  const [users] = useSubscription(["users"]);
+  console.log('users: ', users);
+  return (
+    <pre style={style}>
+      <code>
+        {JSON.stringify(state, null, 2)}
+      </code>
+    </pre>
+
+  );
+};
+
+function App() {
+  return (
+    <div className="App">
+      <Header />
       <button onClick={addNewUser}>Add User</button>
       <button onClick={resetUsers}>Reset Users</button>
+      <Counter />
       <div>
         multiplier
         <button onClick={incEvent("inc_multiplier")}>+</button>
       </div>
       <div>
-        counter
+        add
         <button onClick={incEvent("inc_counter")}>+</button>
       </div>
-      <pre style={style}>
-        <code>
-          {JSON.stringify(state, null, 2)}
-        </code>
-      </pre>
+      <Store />
     </div >
   );
 }

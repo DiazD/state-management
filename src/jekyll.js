@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { filter, map } from "rxjs/operators";
 
-import { updateIn, getIn, arrayEQ } from "./operators";
+import { updateIn, getIn, arrayPartialEQ } from "./operators";
 
 export let state = {
   list: { counter: 0, multiplier: 1 },
@@ -20,26 +20,36 @@ const useGetPathValue = (paths) => {
   // the stream matches a path we're watching via `paths` AND the
   // incoming value isn't the same as the old value
   const filterBy = ([path_, value]) => {
-    const pathMatched = paths.findIndex(path => arrayEQ(path_, path));
+    const pathMatched = paths.findIndex(path => arrayPartialEQ(path_, path));
 
     // if path not matched then let the value flow
     if (pathMatched === -1) return false;
-
-    const partial = data[pathMatched];
-    return pathMatched !== -1 && partial !== value;
+    return true;
   }
 
   useEffect(() => {
     const subscription = subject$
-      .pipe(filter(filterBy))
-      .subscribe(([path_, value]) => {
+      .pipe(
+        filter(filterBy),
+        map(([path_, value]) => {
+          // prepare the value that `subscribe` will use to update the paths
+          // with new state and force re-render
+          return paths.reduce((acc, path, index) => {
+            if (arrayPartialEQ(path, path_)) {
+              acc.push([index, getIn(path, state)]);
+            }
+            return acc;
+          }, []);
+        })
+      )
+      .subscribe((valuesToUpdate) => {
         setData(data => {
-          // find the position the path points to in order to update the proper slot
-          const idx = paths.findIndex(path => arrayEQ(path, path_));
-
           // update state
           const newData = [...data];
-          newData[idx] = value;
+
+          valuesToUpdate.forEach(([idx, newValue]) => {
+            newData[idx] = newValue;
+          })
 
           return newData;
         });
@@ -90,16 +100,18 @@ export const dispatch = (event) => {
 
 export const registerEvent = ({ event, ...eventData }) => {
   events[event] = eventData;
-}
+};
 
-// register add user
+// add user event
 registerEvent({
   event: "add_user",
-  handler: (db, data) => ([
-    { path: ["users", data.counter], data: data.user }
+  paths: [["list", "counter"]],
+  handler: ([counter]) => ([
+    { path: ["users", counter], data: { id: counter, name: `john-${counter}` } }
   ])
 });
 
+// increment counter
 registerEvent({
   event: "inc_counter",
   paths: [["list", "counter"]],
@@ -108,6 +120,7 @@ registerEvent({
   ]),
 });
 
+// increment multiplier
 registerEvent({
   event: "inc_multiplier",
   paths: [["list", "multiplier"]],
@@ -116,6 +129,7 @@ registerEvent({
   ]),
 });
 
+// reset users
 registerEvent({
   event: "reset_users",
   handler: () => ([

@@ -1,8 +1,17 @@
 export const all = (coll) => coll.reduce((acc, el) => acc && el, true);
 export const any = (coll) => coll.reduce((acc, el) => acc || el, false);
 
+export const getLast = (coll) => coll[coll.length - 1];
+
 export const arrayEQ = (coll1, coll2) => {
   return all(coll1.map((str, index) => str === coll2[index]));
+}
+
+export const arrayPartialEQ = (coll1, coll2) => {
+  // if same length then lets use arrayEQ to avoid re-renders
+  if (coll1.length === coll2.length) return arrayEQ(coll1, coll2);
+
+  return coll1[0] === coll2[0];
 }
 
 export const getIn = (path, map, defaultValue = undefined) => {
