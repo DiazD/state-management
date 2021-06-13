@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Subject } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
-import { updateIn, getIn, arrayPartialEQ } from "./operators";
+import { updateIn, getIn, arrayPartialEQ, normalize } from "./operators";
+import { data } from "./resources/mockData";
 
 export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
+  aliens: normalize(data)
 };
 
 const subject$ = new Subject();

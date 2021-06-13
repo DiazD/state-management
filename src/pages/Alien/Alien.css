@@ -1,0 +1,34 @@
+.card-container {
+  width: 100%;
+  margin-top: 16px;
+}
+.card {
+  align-items: center;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  background-color: #fafafa;
+  height: 40px;
+  margin: 0 8px 16px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.33fr) minmax(150px, 1.33fr) minmax(150px, 1.33fr)
+    minmax(150px, 1.33fr) minmax(50px, 100px) minmax(150px, 1.33fr);
+  transition: all 0.2s ease-in-out;
+  line-height: 24px;
+}
+
+.card-column {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}

@@ -40,3 +40,13 @@ export const updateIn = (
   // returns the map
   return map;
 };
+
+export const normalize = (coll) => coll.reduce((acc, item) => {
+  acc[item.id] = item;
+  return acc;
+}, {});
+
+export const selectKeys = (keys, data) => keys.reduce((acc, key) => {
+  if (data.hasOwnProperty(key)) acc[key] = data[key];
+  return acc;
+}, {});
