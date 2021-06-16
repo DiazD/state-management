@@ -54,3 +54,14 @@ registerEvent({
     ])
   }
 });
+
+registerEvent({
+  event: "inc-single-alien-age",
+  paths: [["aliens"]],
+  handler: ([aliens], id) => {
+    const updatedAlien = { ...aliens[id], age: aliens[id].age + 1 };
+    return [
+      { path: ["aliens", id], data: updatedAlien }
+    ]
+  }
+});

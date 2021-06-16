@@ -40,16 +40,20 @@ const Aliens = ({ aliens }) => {
 const ControlPanel = () => {
   const incAge = () => dispatch(["inc-alien-age"]);
   const upcaseNames = () => dispatch(["upcase-alien-name"]);
+  const incSingleAge = () => dispatch(["inc-single-alien-age", 1]);
+
   return (
     <div>
       <button onClick={incAge}>bulk inc age</button>
       <button onClick={upcaseNames}>upcase names</button>
+      <button onClick={incSingleAge}>inc single age</button>
     </div>
   );
 };
 
 const AlienPage = () => {
   const aliens = useSubscription(["aliens"], (aliens) => Object.values(aliens).map(({ id }) => id));
+
   return (
     <Page title="Aliens">
       <ControlPanel />

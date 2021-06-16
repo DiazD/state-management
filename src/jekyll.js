@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { filter, map } from "rxjs/operators";
 
-import { updateIn, getIn, arrayPartialEQ, normalize } from "./operators";
+import { updateIn, getIn, arrayPartialEQ, normalize, all } from "./operators";
 import { data } from "./resources/mockData";
 
 export let state = {
@@ -16,9 +16,23 @@ const subject$ = new Subject();
 
 const singlePath = (paths) => !Array.isArray(paths[0]);
 
+const subscriptionState = {
+  data: [],
+  reducedData: null
+}
+const reducer = (state = subscriptionState, { type, payload }) => {
+  switch (type) {
+    case "SET_DATA": {
+      return { ...state, data: payload.data, reducedData: payload.reducedData };
+    }
+    default:
+      return state;
+  }
+};
+
 const useGetPathValue = (paths, transformationFn) => {
   const init = paths.map(path => getIn(path, state));
-  const [data, setData] = useState(transformationFn(...init));
+  const [data, dispatch] = useReducer(reducer, { data: init, reducedData: transformationFn(...init) });
 
   // filter function to only update state if the incoming change from
   // the stream matches a path we're watching via `paths` AND the
@@ -33,20 +47,35 @@ const useGetPathValue = (paths, transformationFn) => {
 
   useEffect(() => {
     const subscription = subject$
-      .pipe(filter(filterBy))
-      .subscribe(() => {
+      .pipe(
+        filter(filterBy),
+        map(([path_, value]) => {
+          // prepare the value that `subscribe` will use to update the paths
+          // with new state and force re-render
+          return paths.reduce((acc, path, index) => {
+            if (arrayPartialEQ(path, path_)) {
+              acc.push([index, getIn(path, state)]);
+            }
+            return acc;
+          }, []);
+        })
+      )
+      .subscribe((valuesToUpdate) => {
         // update state
         const newData = paths.map((path) => getIn(path, state));
         const reducedData = transformationFn(...newData);
+        if (!all(newData.map((d, idx) => d !== data.data[idx]))) {
+          return;
+        }
 
-        if (reducedData !== data) {
-          setData(reducedData);
+        if (reducedData !== data.reducedData) {
+          dispatch({ type: "SET_DATA", payload: { data: newData, reducedData } });
         }
       })
     return () => subscription.unsubscribe();
     // eslint-disable-next-line
   }, [paths]);
-  return data;
+  return data.reducedData;
 };
 
 export const useSubscription = (paths_, transformationFn = (...x) => x) => {

@@ -42,8 +42,8 @@ const Header = () => {
 };
 
 const Store = () => {
-  const [users, list] = useSubscription([["users"], ["list"]]);
-  console.log('users: ', users, list);
+  const [counter] = useSubscription([["users"], ["list"]]);
+  console.log('users: ', counter);
   return (
     <pre style={style}>
       <code>
