@@ -30,6 +30,8 @@ const reducer = (state = subscriptionState, { type, payload }) => {
   }
 };
 
+const noPathChanged = (newData, data) => !all(newData.map((d, idx) => d !== data[idx]));
+
 const useGetPathValue = (paths, transformationFn) => {
   const init = paths.map(path => getIn(path, state));
   const [data, dispatch] = useReducer(reducer, { data: init, reducedData: transformationFn(...init) });
@@ -47,27 +49,16 @@ const useGetPathValue = (paths, transformationFn) => {
 
   useEffect(() => {
     const subscription = subject$
-      .pipe(
-        filter(filterBy),
-        map(([path_, value]) => {
-          // prepare the value that `subscribe` will use to update the paths
-          // with new state and force re-render
-          return paths.reduce((acc, path, index) => {
-            if (arrayPartialEQ(path, path_)) {
-              acc.push([index, getIn(path, state)]);
-            }
-            return acc;
-          }, []);
-        })
-      )
-      .subscribe((valuesToUpdate) => {
-        // update state
+      .pipe(filter(filterBy))
+      .subscribe(() => {
+        // fetch new data from state and compute the computed state for the subscription
         const newData = paths.map((path) => getIn(path, state));
         const reducedData = transformationFn(...newData);
-        if (!all(newData.map((d, idx) => d !== data.data[idx]))) {
-          return;
-        }
 
+        // if the paths didn't change then just return and don't notify the subscription
+        if (noPathChanged(newData, data.data)) return;
+
+        // if computed state changes then save it and trigger re-render
         if (reducedData !== data.reducedData) {
           dispatch({ type: "SET_DATA", payload: { data: newData, reducedData } });
         }
@@ -89,8 +80,9 @@ export const useSubscription = (paths_, transformationFn = (...x) => x) => {
 
 const events = {};
 
-const updateState = (updates) => {
-  updates.forEach(([event, eventData]) => {
+const updateState = (sideEffects) => {
+  // for each side effect, update the path with the value provided
+  sideEffects.forEach(([event, eventData]) => {
     const { handler, paths = [] } = events[event];
     const data = paths.length === 0 ? { ...state } : paths.map((path) => getIn(path, state));
     const computedState = handler(data, eventData);
