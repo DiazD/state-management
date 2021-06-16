@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Subject } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { filter } from "rxjs/operators";
 
 import { updateIn, getIn, arrayPartialEQ, normalize } from "./operators";
 import { data } from "./resources/mockData";
@@ -33,20 +33,8 @@ const useGetPathValue = (paths, transformationFn) => {
 
   useEffect(() => {
     const subscription = subject$
-      .pipe(
-        filter(filterBy),
-        map(([path_, value]) => {
-          // prepare the value that `subscribe` will use to update the paths
-          // with new state and force re-render
-          return paths.reduce((acc, path, index) => {
-            if (arrayPartialEQ(path, path_)) {
-              acc.push([index, getIn(path, state)]);
-            }
-            return acc;
-          }, []);
-        })
-      )
-      .subscribe((valuesToUpdate) => {
+      .pipe(filter(filterBy))
+      .subscribe(() => {
         // update state
         const newData = paths.map((path) => getIn(path, state));
         const reducedData = transformationFn(...newData);

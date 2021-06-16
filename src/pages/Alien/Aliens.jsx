@@ -8,7 +8,6 @@ const Checkbox = ({ id }) => {
   const onChange = () => {
     dispatch(["ui-select-alien", { id: id, add: !isChecked }])
   }
-  console.log("Who's RE-Rendering", id);
   return <input type="checkbox" checked={isChecked} onChange={onChange} />;
 };
 

@@ -30,9 +30,9 @@ const Counter = () => {
 }
 
 const Header = () => {
-  const [counter, multiplier] = useSubscription(paths);
-
+  const [multiplier, counter] = useSubscription(paths);
   const [user] = useSubscription(["users", counter]);
+
   return (
     <div>
       {user ? <h1>{user.name}</h1> : null}
