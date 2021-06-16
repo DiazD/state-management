@@ -1,3 +1,5 @@
+import { mapObjIndexed } from "ramda";
+
 export const all = (coll) => coll.reduce((acc, el) => acc && el, true);
 export const any = (coll) => coll.reduce((acc, el) => acc || el, false);
 
@@ -50,3 +52,5 @@ export const selectKeys = (keys, data) => keys.reduce((acc, key) => {
   if (data.hasOwnProperty(key)) acc[key] = data[key];
   return acc;
 }, {});
+
+export const mapObject = (f, obj) => mapObjIndexed(f)(obj);

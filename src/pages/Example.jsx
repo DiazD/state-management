@@ -30,14 +30,13 @@ const Counter = () => {
 }
 
 const Header = () => {
-  const vals = useSubscription(paths, (multiplier, counter) => multiplier * counter)
-  const [counter] = useSubscription(counterPath);
+  const [counter, multiplier] = useSubscription(paths);
 
   const [user] = useSubscription(["users", counter]);
   return (
     <div>
       {user ? <h1>{user.name}</h1> : null}
-      <h4>{vals}</h4>
+      <h4>{counter * multiplier}</h4>
     </div>
   )
 };

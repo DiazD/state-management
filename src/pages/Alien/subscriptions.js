@@ -1,5 +1,6 @@
+import { append } from "ramda";
 import { registerEvent } from "../../jekyll";
-import { normalize } from "../../operators";
+import { mapObject } from "../../operators";
 
 registerEvent({
   event: "update-alien",
@@ -14,8 +15,12 @@ registerEvent({
   handler: ([aliens]) => ([
     {
       path: ["aliens"],
-      data: normalize(
-        Object.values(aliens).map((alien) => ({ ...alien, age: alien.age + 1 })),
+      data: mapObject(
+        (alien) => {
+          alien.age += 1;
+          return alien;
+        },
+        aliens
       )
     }
   ])
@@ -27,13 +32,25 @@ registerEvent({
   handler: ([aliens]) => ([
     {
       path: ["aliens"],
-      data: normalize(
-        Object.values(aliens).map((alien) => ({
-          ...alien,
-          first_name: alien.first_name.toUpperCase(),
-          last_name: alien.last_name.toUpperCase(),
-        })),
+      data: mapObject(
+        (alien) => {
+          alien.first_name = alien.first_name.toUpperCase();
+          alien.last_name = alien.last_name.toUpperCase();
+          return alien;
+        },
+        aliens
       )
     }
   ])
+});
+
+registerEvent({
+  event: "ui-select-alien",
+  paths: [["ui", "aliens", "selections"]],
+  handler: ([selections], { id, add }) => {
+    const data = add ? append(id, selections) : selections.filter((id_) => id !== id_);
+    return ([
+      { path: ["ui", "aliens", "selections"], data }
+    ])
+  }
 });

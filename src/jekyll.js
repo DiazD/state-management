@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Subject } from "rxjs";
 import { filter, map } from "rxjs/operators";
 
@@ -8,16 +8,18 @@ import { data } from "./resources/mockData";
 export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
-  aliens: normalize(data)
+  aliens: normalize(data),
+  ui: { aliens: { selections: [] } }
 };
 
 const subject$ = new Subject();
 
 const singlePath = (paths) => !Array.isArray(paths[0]);
 
-const useGetPathValue = (paths) => {
+const useGetPathValue = (paths, transformationFn) => {
   const init = paths.map(path => getIn(path, state));
-  const [data, setData] = useState(init);
+  const [data, setData] = useState(transformationFn(...init));
+
   // filter function to only update state if the incoming change from
   // the stream matches a path we're watching via `paths` AND the
   // incoming value isn't the same as the old value
@@ -45,21 +47,17 @@ const useGetPathValue = (paths) => {
         })
       )
       .subscribe((valuesToUpdate) => {
-        setData(data => {
-          // update state
-          const newData = [...data];
+        // update state
+        const newData = paths.map((path) => getIn(path, state));
+        const reducedData = transformationFn(...newData);
 
-          valuesToUpdate.forEach(([idx, newValue]) => {
-            newData[idx] = newValue;
-          })
-
-          return newData;
-        });
+        if (reducedData !== data) {
+          setData(reducedData);
+        }
       })
     return () => subscription.unsubscribe();
     // eslint-disable-next-line
   }, [paths]);
-
   return data;
 };
 
@@ -68,8 +66,8 @@ export const useSubscription = (paths_, transformationFn = (...x) => x) => {
   const isSinglePath = singlePath(paths_);
   const paths = isSinglePath ? [paths_] : paths_;
 
-  const values = useGetPathValue(paths);
-  return transformationFn(...values);
+  const values = useGetPathValue(paths, transformationFn);
+  return values
 };
 
 const events = {};
@@ -107,10 +105,10 @@ export const registerEvent = ({ event, ...eventData }) => {
 // add user event
 registerEvent({
   event: "add_user",
-  paths: [["list", "counter"]],
-  handler: ([counter]) => ([
-    { path: ["users", counter], data: { id: counter, name: `john-${counter}` } }
-  ])
+  paths: [["list", "counter"], ["users"]],
+  handler: ([counter, users]) => users[counter] === undefined ?
+    [{ path: ["users", counter], data: { id: counter, name: `john-${counter}` } }] :
+    []
 });
 
 // increment counter
