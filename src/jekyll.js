@@ -1,15 +1,15 @@
 import { useEffect, useReducer } from "react";
 import { Subject } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { filter } from "rxjs/operators";
 
-import { updateIn, getIn, arrayPartialEQ, normalize, all } from "./operators";
+import { updateIn, getIn, arrayPartialEQ, normalize, any } from "./operators";
 import { data } from "./resources/mockData";
 
 export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
   aliens: normalize(data),
-  ui: { aliens: { selections: [] } }
+  ui: { aliens: { selections: [], aliensBeingEdited: [] } }
 };
 
 const subject$ = new Subject();
@@ -30,7 +30,7 @@ const reducer = (state = subscriptionState, { type, payload }) => {
   }
 };
 
-const noPathChanged = (newData, data) => !all(newData.map((d, idx) => d !== data[idx]));
+const noPathChanged = (newData, data) => !any(newData.map((d, idx) => d !== data[idx]));
 
 const useGetPathValue = (paths, transformationFn) => {
   const init = paths.map(path => getIn(path, state));
@@ -80,7 +80,7 @@ export const useSubscription = (paths_, transformationFn = (...x) => x) => {
 
 const events = {};
 
-const updateState = (sideEffects) => {
+const handleEvent = (sideEffects) => {
   // for each side effect, update the path with the value provided
   sideEffects.forEach(([event, eventData]) => {
     const { handler, paths = [] } = events[event];
@@ -104,7 +104,7 @@ export const dispatch = (event) => {
     events = [event];
   }
 
-  updateState(events);
+  handleEvent(events);
 };
 
 export const registerEvent = ({ event, ...eventData }) => {

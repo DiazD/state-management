@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Page } from "../../components";
 import { useSubscription, dispatch } from "../../jekyll";
 import "./Alien.css";
@@ -11,6 +12,72 @@ const Checkbox = ({ id }) => {
   return <input type="checkbox" checked={isChecked} onChange={onChange} />;
 };
 
+const AlienDetails = ({ alien, isEditing }) => (
+  <>
+    <span className="card-column">{alien.first_name}</span>
+    <span className="card-column">{alien.last_name}</span>
+    <span className="card-column">{alien.email}</span>
+    <span className="card-column">{alien.age}</span>
+    <span className="card-column text-left">{alien.favorite_animal}</span>
+    <span className="card-column">
+      <button onClick={() => dispatch(["ui-set-alien-to-edit", alien.id])}>edit</button>
+      <button>delete</button>
+    </span>
+  </>
+);
+
+const AlienForm = ({ alien }) => {
+  const firstNameRef = useRef(alien.first_name);
+  const lastNameRef = useRef(alien.last_name);
+  const emailRef = useRef(alien.email);
+  const ageRef = useRef(alien.age);
+  const favoriteAnimalRef = useRef(alien.favorite_animal);
+
+  const onSubmit = () => {
+    const payload = {
+      first_name: firstNameRef.current.value,
+      last_name: lastNameRef.current.value,
+      email: emailRef.current.value,
+      age: parseInt(ageRef.current.value),
+      favorite_animal: favoriteAnimalRef.current.value,
+    };
+
+    dispatch(["ui-update-alien-info", { ...alien, ...payload }]);
+  };
+
+  return (
+    <>
+      <span className="card-column">
+        <input ref={firstNameRef} name="first_name" defaultValue={alien.first_name} />
+      </span>
+      <span className="card-column">
+        <input ref={lastNameRef} name="last_name" defaultValue={alien.last_name} />
+      </span>
+      <span className="card-column">
+        <input ref={emailRef} name="email" defaultValue={alien.email} />
+      </span>
+      <span className="card-column">
+        <input ref={ageRef} name="age" defaultValue={alien.age} />
+      </span>
+      <span className="card-column text-left">
+        <input ref={favoriteAnimalRef} name="favorite_animal" defaultValue={alien.favorite_animal} />
+      </span>
+      <span className="card-column">
+        <button onClick={onSubmit}>save</button>
+        <button>cancel</button>
+      </span>
+    </>
+  )
+};
+
+const AlienEditableDetails = ({ alien }) => {
+  const isEditing = useSubscription(
+    ["ui", "aliens", "aliensBeingEdited"],
+    (aliensBeingEdited) => aliensBeingEdited.includes(alien.id)
+  );
+  return isEditing ? <AlienForm alien={alien} /> : <AlienDetails alien={alien} isEditing={isEditing} />;
+};
+
 const Alien = ({ id }) => {
   const [alien] = useSubscription(["aliens", id]);
 
@@ -19,11 +86,7 @@ const Alien = ({ id }) => {
       <Checkbox id={id} />
       <div className="card">
         <span className="card-column text-left"><img alt="hello" src={alien.image} /></span>
-        <span className="card-column">{alien.first_name}</span>
-        <span className="card-column">{alien.last_name}</span>
-        <span className="card-column">{alien.email}</span>
-        <span className="card-column">{alien.age}</span>
-        <span className="card-column text-left">{alien.favorite_animal}</span>
+        <AlienEditableDetails alien={alien} />
       </div>
     </div>
   );

@@ -12,8 +12,8 @@
   padding: 16px;
   display: grid;
   grid-template-columns:
-    minmax(150px, 1.33fr) minmax(150px, 1.33fr) minmax(150px, 1.33fr)
-    minmax(150px, 1.33fr) minmax(50px, 100px) minmax(150px, 1.33fr);
+    minmax(50px, 100px) minmax(150px, 1.33fr) minmax(150px, 1.33fr)
+    minmax(150px, 1.33fr) minmax(150px, 1.33fr) minmax(150px, 1.33fr) minmax(150px, 1.33fr);
   transition: all 0.2s ease-in-out;
   line-height: 24px;
   width: 100%;
