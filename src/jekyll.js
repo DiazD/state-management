@@ -3,13 +3,14 @@ import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 
 import { updateIn, getIn, arrayPartialEQ, normalize, any } from "./operators";
+import { log } from "./utils";
 import { data } from "./resources/mockData";
 
 export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
   aliens: normalize(data),
-  ui: { aliens: { selections: [], aliensBeingEdited: [] } }
+  ui: { aliens: { selections: [], aliensBeingEdited: [], selectedAlien: null } }
 };
 
 const subject$ = new Subject();
@@ -78,15 +79,56 @@ export const useSubscription = (paths_, transformationFn = (...x) => x) => {
   return values
 };
 
+const selectPaths = (paths, state) => {
+  return paths.reduce((acc, path) => {
+    const lastPath = path[path.length - 1];
+    acc[lastPath] = getIn(path, state);
+    return acc;
+  }, {});
+};
+
+const interceptors = {
+  in: {
+    "get-event-interceptor": {
+      order: 0,
+      interceptor: (event) => {
+        return [event, { eventHandler: events[event[0]] }];
+      }
+    },
+    "get-selected-paths-state-interceptor": {
+      order: 1,
+      interceptor: (event, context) => {
+        const { paths = [] } = context.eventHandler;
+        const selectedPaths = paths.length === 0 ? state : selectPaths(paths, state);
+        return [event, { ...context, selectedPaths }]
+      }
+    }
+  },
+  out: {}
+};
+
+const putThroughInterceptorPipeline = (event, eventContext, type) => {
+  const chain = Object.values(interceptors[type]).sort((a, b) => a.order - b.order)
+  return chain.reduce(([event, context], { interceptor }) => {
+    const [newEvent, newContext] = interceptor(event, context);
+    return [newEvent, newContext];
+  }, [event, eventContext]);
+};
+
+export const registerInterceptor = ({ name, interceptor, order, type }) => {
+  interceptors[type][name] = { interceptor, order };
+};
+
 const events = {};
 
-const handleEvent = (sideEffects) => {
+const handleEvents = (sideEffects) => {
   // for each side effect, update the path with the value provided
-  sideEffects.forEach(([event, eventData]) => {
-    const { handler, paths = [] } = events[event];
-    const data = paths.length === 0 ? { ...state } : paths.map((path) => getIn(path, state));
-    const computedState = handler(data, eventData);
+  sideEffects.forEach((event) => {
+    const [event_, context] = putThroughInterceptorPipeline(event, {}, "in");
+    const computedState = context.eventHandler.handler(context.selectedPaths, event_[1]);
+    putThroughInterceptorPipeline(event_, { ...context, effects: computedState }, "out");
 
+    // apply side effects
     computedState.forEach(({ path, data }) => {
       const newState = updateIn(path, (_, newValue) => newValue, data, { ...state });
       state = newState;
@@ -104,7 +146,7 @@ export const dispatch = (event) => {
     events = [event];
   }
 
-  handleEvent(events);
+  handleEvents(events);
 };
 
 export const registerEvent = ({ event, ...eventData }) => {
@@ -115,7 +157,7 @@ export const registerEvent = ({ event, ...eventData }) => {
 registerEvent({
   event: "add_user",
   paths: [["list", "counter"], ["users"]],
-  handler: ([counter, users]) => users[counter] === undefined ?
+  handler: ({ counter, users }) => users[counter] === undefined ?
     [{ path: ["users", counter], data: { id: counter, name: `john-${counter}` } }] :
     []
 });
@@ -124,7 +166,7 @@ registerEvent({
 registerEvent({
   event: "inc_counter",
   paths: [["list", "counter"]],
-  handler: ([counter]) => ([
+  handler: ({ counter }) => ([
     { path: ["list", "counter"], data: counter + 1 }
   ]),
 });
@@ -133,7 +175,7 @@ registerEvent({
 registerEvent({
   event: "inc_multiplier",
   paths: [["list", "multiplier"]],
-  handler: ([multiplier]) => ([
+  handler: ({ multiplier }) => ([
     { path: ["list", "multiplier"], data: multiplier + 1 }
   ]),
 });
@@ -144,4 +186,34 @@ registerEvent({
   handler: () => ([
     { path: ["users"], data: {} }
   ]),
+});
+
+// interceptors
+registerInterceptor({
+  name: "event-in-logger",
+  order: 2,
+  type: "in",
+  interceptor: (event, context) => {
+    console.groupCollapsed(`BEFORE Event: ${event[0]}`);
+    log("Event Name:", event[0]);
+    log("Event Data:", event[1]);
+    log("Event State Paths", context.selectedPaths);
+    console.groupEnd();
+
+    return [event, context];
+  }
+});
+
+registerInterceptor({
+  name: "event-out-logger",
+  order: 0,
+  type: "out",
+  interceptor: (event, context) => {
+    console.groupCollapsed(`AFTER Event: ${event[0]}`);
+    log("Event Name:", event[0]);
+    log("Event Side Effects", context.effects)
+    console.groupEnd();
+
+    return [event, context];
+  }
 });

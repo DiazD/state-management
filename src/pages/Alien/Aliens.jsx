@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useRef, memo } from "react";
 import { Page } from "../../components";
 import { useSubscription, dispatch } from "../../jekyll";
 import "./Alien.css";
 import { } from "./subscriptions";
+import Details from "./AlienDetails";
 
 const Checkbox = ({ id }) => {
   const isChecked = useSubscription(["ui", "aliens", "selections"], (selections) => selections.includes(id))
@@ -21,7 +22,8 @@ const AlienDetails = ({ alien, isEditing }) => (
     <span className="card-column text-left">{alien.favorite_animal}</span>
     <span className="card-column">
       <button onClick={() => dispatch(["ui-set-alien-to-edit", alien.id])}>edit</button>
-      <button>delete</button>
+      <button onClick={() => dispatch(["delete-alien", alien.id])}>delete</button>
+      <button onClick={() => dispatch(["ui-set-alien-to-view", alien.id])}>view</button>
     </span>
   </>
 );
@@ -78,8 +80,8 @@ const AlienEditableDetails = ({ alien }) => {
   return isEditing ? <AlienForm alien={alien} /> : <AlienDetails alien={alien} isEditing={isEditing} />;
 };
 
-const Alien = ({ id }) => {
-  const [alien] = useSubscription(["aliens", id]);
+const Alien_ = ({ id }) => {
+  const alien = useSubscription(["aliens", id], (alien) => alien);
 
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
@@ -91,8 +93,13 @@ const Alien = ({ id }) => {
     </div>
   );
 }
+const Alien = memo(Alien_); // memoize component to avoid re-rendering on `deletion`
 
-const Aliens = ({ aliens }) => {
+const Aliens = () => {
+  const aliens = useSubscription(
+    ["aliens"],
+    (aliens) => Object.values(aliens).map(({ id }) => id)
+  );
   return (
     <div className="card-container">
       {aliens.map((id) => <Alien key={id} id={id} />)}
@@ -114,13 +121,14 @@ const ControlPanel = () => {
   );
 };
 
-const AlienPage = () => {
-  const aliens = useSubscription(["aliens"], (aliens) => Object.values(aliens).map(({ id }) => id));
 
+
+const AlienPage = () => {
   return (
     <Page title="Aliens">
+      <Details />
       <ControlPanel />
-      <Aliens aliens={aliens} />
+      <Aliens />
     </Page>
   );
 };
