@@ -1,5 +1,7 @@
+// 4794091477
 import { append, dissocPath } from "ramda";
 import { registerEvent } from "../../jekyll";
+import { sortBy } from "../../utils";
 
 registerEvent({
   event: "update-alien",
@@ -67,17 +69,6 @@ registerEvent({
 });
 
 registerEvent({
-  event: "inc-single-alien-age",
-  paths: [["aliens"]],
-  handler: ({ aliens }, id) => {
-    const updatedAlien = { ...aliens[id], age: aliens[id].age + 1 };
-    return [
-      { path: ["aliens", id], data: updatedAlien }
-    ]
-  }
-});
-
-registerEvent({
   event: "ui-set-alien-to-edit",
   paths: [["ui", "aliens", "aliensBeingEdited"]],
   handler: ({ aliensBeingEdited }, alienId) => ([
@@ -101,5 +92,34 @@ registerEvent({
   event: "ui-set-alien-to-view",
   handler: (_, alienId) => ([
     { path: ["ui", "aliens", "selectedAlien"], data: alienId }
+  ])
+});
+
+registerEvent({
+  event: "ui-search-aliens",
+  paths: [["aliens"]],
+  handler: ({ aliens }, searchTerm) => {
+    return ([
+      { path: ["ui", "aliens", "selections"], data: [] },
+      {
+        path: ["ui", "aliens", "aliensToShow"],
+        data: !searchTerm ?
+          Object.values(aliens).map(({ id }) => id) :
+          Object.values(aliens)
+            .filter(({ first_name }) => first_name.includes(searchTerm))
+            .map(({ id }) => id)
+      }
+    ]);
+  }
+});
+
+registerEvent({
+  event: "ui-aliens-sort",
+  paths: [["aliens"], ["ui", "aliens", "aliensToShow"]],
+  handler: ({ aliens, aliensToShow }, sortByOptions) => ([
+    {
+      path: ["ui", "aliens", "aliensToShow"],
+      data: sortBy(aliensToShow.map((id) => aliens[id]), sortByOptions)
+    }
   ])
 });

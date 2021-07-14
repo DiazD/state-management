@@ -13,9 +13,11 @@ function App() {
   return (
     <div className="App">
       <Router>
-        <h3>Main App</h3>
-        <Link to="/example">Example page</Link><br />
-        <Link to="/aliens">Aliens page</Link>
+        <div>
+          <h3>Main App</h3>
+          <Link to="/example">Example page</Link><br />
+          <Link to="/aliens">Aliens page</Link>
+        </div>
         <Switch>
           <Route path="/example"><Example /></Route>
           <Route path="/aliens"><Aliens /></Route>

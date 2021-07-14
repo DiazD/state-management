@@ -10,7 +10,14 @@ export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
   aliens: normalize(data),
-  ui: { aliens: { selections: [], aliensBeingEdited: [], selectedAlien: null } }
+  ui: {
+    aliens: {
+      selections: [],
+      aliensBeingEdited: [],
+      selectedAlien: null,
+      aliensToShow: [],
+    }
+  }
 };
 
 const subject$ = new Subject();
