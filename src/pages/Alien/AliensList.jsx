@@ -19,7 +19,7 @@ const AlienDetails = ({ alien, isEditing }) => (
     <span className="card-column text-left">{alien.favorite_animal}</span>
     <span className="card-column">
       <button onClick={() => dispatch(["ui-set-alien-to-edit", alien.id])}>edit</button>
-      <button onClick={() => dispatch(["delete-alien", alien.id])}>delete</button>
+      <button onClick={() => dispatch(["ui-delete-alien", alien.id])}>delete</button>
       <button onClick={() => dispatch(["ui-set-alien-to-view", alien.id])}>view</button>
     </span>
   </>
@@ -79,7 +79,6 @@ const AlienEditableDetails = ({ alien }) => {
 
 const Alien_ = ({ id }) => {
   const alien = useSubscription(["aliens", id], (alien) => alien);
-
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <Checkbox id={id} />

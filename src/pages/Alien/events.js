@@ -11,10 +11,11 @@ registerEvent({
 });
 
 registerEvent({
-  event: "delete-alien",
-  paths: [["aliens"]],
-  handler: ({ aliens }, alienToRemove) => {
+  event: "ui-delete-alien",
+  paths: [["aliens"], ["ui", "aliens", "aliensToShow"]],
+  handler: ({ aliens, aliensToShow }, alienToRemove) => {
     return [
+      { path: ["ui", "aliens", "aliensToShow"], data: aliensToShow.filter((id) => id !== alienToRemove) },
       { path: ["aliens"], data: dissocPath([alienToRemove], aliens) }
     ];
   }

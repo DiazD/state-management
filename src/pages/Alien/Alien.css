@@ -33,3 +33,8 @@
 .text-right {
   text-align: right;
 }
+
+.control-panel {
+  display: flex;
+  justify-content: space-around;
+}

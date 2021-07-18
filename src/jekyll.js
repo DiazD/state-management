@@ -16,7 +16,8 @@ export let state = {
       aliensBeingEdited: [],
       selectedAlien: null,
       aliensToShow: [],
-    }
+    },
+    state: { viewedPaths: [], showStateTree: false }
   }
 };
 

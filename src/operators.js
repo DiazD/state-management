@@ -54,3 +54,31 @@ export const selectKeys = (keys, data) => keys.reduce((acc, key) => {
 }, {});
 
 export const mapObject = (f, obj) => mapObjIndexed(f)(obj);
+
+export const delay = (f, time) => {
+  setTimeout(() => f(), time);
+};
+
+export const isObject = (o) => {
+  return o instanceof Object && o.constructor === Object;
+}
+
+const getRootPaths = (obj, start, acc) => {
+  return Object.keys(obj).reduce((acc, root) => {
+    getChildrenPaths(obj[root], [...start, root], acc);
+    return acc;
+  }, acc);
+};
+
+const getChildrenPaths = (obj, root, acc) => {
+  if (!isObject(obj)) {
+    acc.push(root.join(","));
+    return;
+  }
+  acc.push(root.join(","))
+  return getRootPaths(obj, root, acc);
+};
+
+export const getPaths = (obj) => {
+  return getRootPaths(obj, [], []);
+};
