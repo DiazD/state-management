@@ -47,9 +47,11 @@ const Sort = () => {
 const ControlPanel = () => {
   const incAge = () => dispatch(["inc-alien-age"]);
   const upcaseNames = () => dispatch(["upcase-alien-name"]);
+  const asyncEvent = () => dispatch(["async-get-request"]);
 
   return (
     <div className="control-panel">
+      <button onClick={asyncEvent}>Async</button>
       <button onClick={incAge}>bulk inc age</button>
       <button onClick={upcaseNames}>upcase names</button>
       <Search />

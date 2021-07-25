@@ -11,6 +11,7 @@ export let state = {
   users: {},
   aliens: normalize(data),
   ui: {
+    person: 1,
     aliens: {
       selections: [],
       aliensBeingEdited: [],
@@ -129,15 +130,9 @@ export const registerInterceptor = ({ name, interceptor, order, type }) => {
 
 const events = {};
 
-const handleEvents = (sideEffects) => {
-  // for each side effect, update the path with the value provided
-  sideEffects.forEach((event) => {
-    const [event_, context] = putThroughInterceptorPipeline(event, {}, "in");
-    const computedState = context.eventHandler.handler(context.selectedPaths, event_[1]);
-    putThroughInterceptorPipeline(event_, { ...context, effects: computedState }, "out");
-
-    // apply side effects
-    computedState.forEach(({ path, data }) => {
+const effectHandlers = {
+  state: async (effects) => {
+    effects.forEach(({ path, data }) => {
       const newState = updateIn(path, (_, newValue) => newValue, data, { ...state });
       state = newState;
 
@@ -145,8 +140,39 @@ const handleEvents = (sideEffects) => {
       const returnVal = getIn(path, state);
       subject$.next([path, returnVal]);
     })
+  },
+  async: async ({ method, url, success, error }) => {
+    fetch(url, { method })
+      .then(response => response.json())
+      .then(success)
+      .catch(error)
+  },
+};
+
+const EventStream$ = new Subject();
+const EffectStream$ = new Subject();
+
+EffectStream$.subscribe(async (effects) => {
+  await Object.entries(effects).forEach(async ([effectType, sideEffects]) => {
+    const effectHandler = effectHandlers[effectType];
+    await effectHandler(sideEffects);
   });
-}
+});
+
+EventStream$.subscribe(([eventName, eventData]) => {
+  // console.log("BOOOM", eventName, eventData);
+  // run through IN interceptors
+  const [event, context] = putThroughInterceptorPipeline([eventName, eventData], {}, "in");
+
+  // handle the event to produce side-effects
+  const effects = context.eventHandler.handler(context.selectedPaths, eventData);
+
+  // run through OUT interceptors
+  putThroughInterceptorPipeline(event, { ...context, effects }, "out");
+
+  // run effect handler
+  EffectStream$.next(effects);
+});
 
 export const dispatch = (event) => {
   let events = event;
@@ -154,7 +180,7 @@ export const dispatch = (event) => {
     events = [event];
   }
 
-  handleEvents(events);
+  events.forEach((event) => EventStream$.next(event));
 };
 
 export const registerEvent = ({ event, ...eventData }) => {
@@ -165,35 +191,43 @@ export const registerEvent = ({ event, ...eventData }) => {
 registerEvent({
   event: "add_user",
   paths: [["list", "counter"], ["users"]],
-  handler: ({ counter, users }) => users[counter] === undefined ?
-    [{ path: ["users", counter], data: { id: counter, name: `john-${counter}` } }] :
-    []
+  handler: ({ counter, users }) => ({
+    state: users[counter] === undefined ?
+      [{ path: ["users", counter], data: { id: counter, name: `john-${counter}` } }] :
+      []
+  })
 });
 
 // increment counter
 registerEvent({
   event: "inc_counter",
   paths: [["list", "counter"]],
-  handler: ({ counter }) => ([
-    { path: ["list", "counter"], data: counter + 1 }
-  ]),
+  handler: ({ counter }) => ({
+    state: [
+      { path: ["list", "counter"], data: counter + 1 }
+    ]
+  }),
 });
 
 // increment multiplier
 registerEvent({
   event: "inc_multiplier",
   paths: [["list", "multiplier"]],
-  handler: ({ multiplier }) => ([
-    { path: ["list", "multiplier"], data: multiplier + 1 }
-  ]),
+  handler: ({ multiplier }) => ({
+    state: [
+      { path: ["list", "multiplier"], data: multiplier + 1 }
+    ]
+  }),
 });
 
 // reset users
 registerEvent({
   event: "reset_users",
-  handler: () => ([
-    { path: ["users"], data: {} }
-  ]),
+  handler: () => ({
+    state: [
+      { path: ["users"], data: {} }
+    ]
+  }),
 });
 
 // interceptors
