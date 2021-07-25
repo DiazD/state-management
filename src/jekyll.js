@@ -10,6 +10,56 @@ export let state = {
   list: { counter: 0, multiplier: 1 },
   users: {},
   aliens: normalize(data),
+  entities: {
+    "01": {
+      id: "01",
+      position: { x: 50, y: 100 },
+      component: "green-block",
+      properties: {
+        width: 40,
+        height: 40,
+      }
+    },
+    "02": {
+      id: "02",
+      position: { x: 20, y: 200 },
+      component: "green-block",
+      properties: {
+        width: 40,
+        height: 40,
+      }
+    },
+    "03": {
+      id: "03",
+      position: { x: 600, y: 350 },
+      component: "green-block",
+      properties: {
+        width: 40,
+        height: 40,
+      }
+    },
+    "04": {
+      id: "04",
+      position: { x: 175, y: 255 },
+      component: "green-block",
+      properties: {
+        width: 40,
+        height: 40,
+      }
+    },
+    "05": {
+      id: "05",
+      position: { x: 65, y: 200 },
+      component: "green-block",
+      properties: {
+        width: 8,
+        height: 8,
+      },
+      animate: [
+
+      ]
+    }
+  },
   ui: {
     aliens: {
       selections: [],

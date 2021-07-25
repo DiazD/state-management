@@ -1,0 +1,15 @@
+.board {
+  border: 1px solid black;
+  width: 800px;
+  height: 400px;
+}
+
+.bi {
+  position: absolute;
+}
+
+.box {
+  border: 1px solid black;
+  background: green;
+  display: inline-block;
+}

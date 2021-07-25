@@ -9,7 +9,7 @@ import 'semantic-ui-css/semantic.min.css';
 import State from "./pages/State/StatePage";
 
 // pages
-import { Example, Aliens } from "./pages";
+import { Example, Aliens, Simulation } from "./pages";
 
 function App() {
   return (
@@ -19,11 +19,13 @@ function App() {
           <h3>Main App</h3>
           <Link to="/example">Example page</Link><br />
           <Link to="/aliens">Aliens page</Link>
+          <Link to="/simulation">Simulation</Link>
           <State />
         </div>
         <Switch>
           <Route path="/example"><Example /></Route>
           <Route path="/aliens"><Aliens /></Route>
+          <Route path="/simulation"><Simulation /></Route>
         </Switch>
       </Router>
     </div >
