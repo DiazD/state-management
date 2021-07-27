@@ -148,3 +148,16 @@ registerEvent({
     ]
   })
 });
+
+registerEvent({
+  event: "ui-edit-alien/cancel-edit",
+  paths: [["ui", "aliens", "aliensBeingEdited"]],
+  handler: ({ aliensBeingEdited }, alienId) => ({
+    state: [
+      {
+        path: ["ui", "aliens", "aliensBeingEdited"],
+        data: aliensBeingEdited.filter((id) => id !== alienId)
+      },
+    ],
+  }),
+});

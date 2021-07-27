@@ -10,7 +10,7 @@ const Checkbox = ({ id }) => {
   return <input type="checkbox" checked={isChecked} onChange={onChange} />;
 };
 
-const AlienDetails = ({ alien, isEditing }) => (
+const AlienDetails = ({ alien }) => (
   <>
     <span className="card-column">{alien.first_name}</span>
     <span className="card-column">{alien.last_name}</span>
@@ -44,6 +44,8 @@ const AlienForm = ({ alien }) => {
     dispatch(["ui-update-alien-info", { ...alien, ...payload }]);
   };
 
+  const cancelEdit = () => dispatch(["ui-edit-alien/cancel-edit", alien.id]);
+
   return (
     <>
       <span className="card-column">
@@ -63,7 +65,7 @@ const AlienForm = ({ alien }) => {
       </span>
       <span className="card-column">
         <button onClick={onSubmit}>save</button>
-        <button>cancel</button>
+        <button onClick={cancelEdit}>cancel</button>
       </span>
     </>
   )
@@ -80,7 +82,7 @@ const AlienEditableDetails = ({ alien }) => {
 const Alien_ = ({ id }) => {
   const alien = useSubscription(["aliens", id], (alien) => alien);
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div id={`alien-${id}`} style={{ display: "flex", alignItems: "center" }}>
       <Checkbox id={id} />
       <div className="card">
         <span className="card-column text-left"><img alt="hello" src={alien.image} /></span>
