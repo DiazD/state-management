@@ -1,6 +1,7 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
+import assert from 'assert';
 
 import { updateIn, getIn, arrayPartialEQ, normalize, any } from "./operators";
 import { log } from "./utils";
@@ -45,6 +46,7 @@ const noPathChanged = (newData, data) => !any(newData.map((d, idx) => d !== data
 const useGetPathValue = (paths, transformationFn, byPass = false) => {
     const init = paths.map(path => getIn(path, state));
     const [data, dispatch] = useReducer(reducer, { data: init, reducedData: transformationFn(...init) });
+    const prevData = useRef({ data: init, reducedData: transformationFn(...init) });
 
     // filter function to only update state if the incoming change from
     // the stream matches a path we're watching via `paths` AND the
@@ -60,17 +62,25 @@ const useGetPathValue = (paths, transformationFn, byPass = false) => {
     useEffect(() => {
         const subscription = subject$
             .pipe(filter(filterBy))
-            .subscribe(() => {
+            .subscribe((crap) => {
                 // fetch new data from state and compute the computed state for the subscription
                 const newData = paths.map((path) => getIn(path, state));
                 const reducedData = transformationFn(...newData);
 
                 // if the paths didn't change then just return and don't notify the subscription
-                if (!byPass && noPathChanged(newData, data.data)) return;
+                if (!byPass && noPathChanged(newData, prevData.current.data)) return;
 
                 // if computed state changes then save it and trigger re-render
-                if (byPass || reducedData !== data.reducedData) {
+                try {
+                    if (byPass) {
+                        throw new Error('');
+                    }
+                    assert.deepEqual(reducedData, prevData.current.reducedData);
+                }
+                catch {
                     dispatch({ type: "SET_DATA", payload: { data: newData, reducedData } });
+                    prevData.current.data = newData;
+                    prevData.current.reducedData = reducedData;
                 }
             })
         return () => subscription.unsubscribe();

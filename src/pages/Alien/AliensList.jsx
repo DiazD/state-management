@@ -1,9 +1,13 @@
 import { useRef, memo, useEffect } from "react";
 import { useSubscription, dispatch } from "../../jekyll";
 import "./Alien.css";
+import { UserSettingsPage, createComponent } from '../../mrhyde';
 
 const Checkbox = ({ id }) => {
-    const isChecked = useSubscription(["ui", "aliens", "selections"], (selections) => selections.includes(id))
+    const isChecked = useSubscription(
+        ["ui", "aliens", "selections"],
+        (selections) => selections.includes(id)
+    )
     const onChange = () => {
         dispatch(["ui-select-alien", { id: id, add: !isChecked }])
     }
@@ -71,41 +75,67 @@ const AlienForm = ({ alien }) => {
     )
 };
 
-const AlienEditableDetails = ({ id }) => {
-    const [alien] = useSubscription(["aliens", id])
-    const isEditing = useSubscription(
-        ["ui", "aliens", "aliensBeingEdited"],
-        (aliensBeingEdited) => aliensBeingEdited.includes(alien.id)
-    );
+const AlienEditableDetailsView = ({ alien, isEditing }) => {
     return isEditing ? <AlienForm alien={alien} /> : <AlienDetails alien={alien} isEditing={isEditing} />;
 };
 
-const Alien_ = ({ id }) => {
-    const image = useSubscription(['aliens', id, 'image']);
+const AlienEditableDetails = createComponent({
+    renderer: AlienEditableDetailsView,
+    subscriptions: ({ alien }) => ([
+        [['ui', 'aliens', 'aliensBeingEdited']],
+        (aliensBeingEdited) => {
+            return [aliensBeingEdited.includes(alien.id)];
+        },
+    ]),
+    computedProps: (props) => {
+        return ({
+            isEditing: props.aliensBeingEdited,
+        })
+    }
+});
 
+
+const AlienView = ({ id, alien }) => {
     return (
         <div id={`alien-${id}`} style={{ display: "flex", alignItems: "center" }}>
             <Checkbox id={id} />
             <div className="card">
-                <span className="card-column text-left"><img alt="hello" src={image} /></span>
-                <AlienEditableDetails id={id} />
+                <span className="card-column text-left"><img alt="hello" src={""} /></span>
+                <AlienEditableDetails alien={alien} />
             </div>
         </div>
     );
 }
+
+const Alien_ = createComponent({
+    subscriptions: ({ id }) => ([
+        [['aliens', id]],
+    ]),
+    computedProps: (componentEnvironment) => ({
+        alien: componentEnvironment[componentEnvironment.id],
+    }),
+    renderer: AlienView
+});
+
 const Alien = memo(Alien_); // memoize component to avoid re-rendering on `deletion`
 
-const Aliens = () => {
-    const aliens = useSubscription(
-        ["ui", "aliens", "aliensToShow"],
-        (aliens) => aliens
-    );
-
+const AliensView = ({ aliens }) => {
     return (
         <div className="card-container">
+            <UserSettingsPage id={1} />
             {aliens.map((id) => <Alien key={id} id={id} />)}
         </div>
     );
 };
+
+const Aliens = createComponent({
+    subscriptions: () => ([
+        [['ui', 'aliens', 'aliensToShow']],
+    ]),
+    computedProps: ({ aliensToShow }) => ({
+        aliens: aliensToShow,
+    }),
+    renderer: AliensView
+})
 
 export default Aliens;
