@@ -3,7 +3,7 @@ import { Search as SearchInput } from "semantic-ui-react";
 
 import "./StatePage.css";
 import { delay, getPaths, getIn, isObject, all } from "../../operators";
-import { useSubscription, dispatch, subject$ } from "../../jekyll";
+import { useSubscription, dispatch } from "../../jekyll";
 import "./events";
 
 const Search = () => {

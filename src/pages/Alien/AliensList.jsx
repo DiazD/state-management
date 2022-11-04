@@ -1,4 +1,4 @@
-import { useRef, memo, useEffect } from "react";
+import { useRef, memo } from "react";
 import { useSubscription, dispatch } from "../../jekyll";
 import "./Alien.css";
 import { UserSettingsPage, createComponent } from '../../mrhyde';

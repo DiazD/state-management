@@ -55,8 +55,7 @@ const useGetPathValue = (paths, transformationFn, byPass = false) => {
         const pathMatched = paths.findIndex(path => arrayPartialEQ(path_, path));
 
         // if path not matched then let the value flow
-        if (!byPass && pathMatched === -1) return false;
-        return true;
+        return !(!byPass && pathMatched === -1)
     }
 
     useEffect(() => {
@@ -89,12 +88,13 @@ const useGetPathValue = (paths, transformationFn, byPass = false) => {
     return data.reducedData;
 };
 
-export const useSubscription = (paths_, transformationFn = (...x) => x, byPass) => {
+export const useSubscription = (paths_, transformationFn, byPass) => {
     // normalize paths
+    const txFunction = transformationFn || ((...x) => x);
     const isSinglePath = singlePath(paths_);
     const paths = isSinglePath ? [paths_] : paths_;
 
-    const values = useGetPathValue(paths, transformationFn, byPass);
+    const values = useGetPathValue(paths, txFunction, byPass);
     return values
 };
 
