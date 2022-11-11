@@ -273,14 +273,13 @@ registerInterceptor({
 /////////////////// throttle interceptor ////////////////////////////////////////
 const throttledStream = new Subject();
 const intoThrottledStream = (effects) => {
-    // TODO(Diego): Maybe allow to add a delay between each?
     throttledStream.next(effects);
 };
 
 const runEffects = async (effects) => {
     const effectsArray = Object.entries(effects);
-    for (let i = 0; i < effectsArray.length; ++i) {
-        const [effectType, sideEffects] = effectsArray[i];
+    for (const effect of effectsArray) {
+        const [effectType, sideEffects] = effect;
         const effectHandler = effectHandlers[effectType];
         await effectHandler(sideEffects);
     }
@@ -293,7 +292,6 @@ throttledStream
             console.log("effects ran", effects);
         },
         async (error) => {
-            // TODO(Diego): test error handling here
             console.log("error occurred", error);
         },
         async (complete) => {
