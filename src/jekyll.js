@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef } from "react";
-import { Subject } from "rxjs";
-import { filter } from "rxjs/operators";
+import { Subject, of, interval, Observable } from "rxjs";
+import { filter, throttle, throttleTime, concatMap } from "rxjs/operators";
 import assert from 'assert';
 
 import { updateIn, getIn, arrayPartialEQ, normalize, any } from "./operators";
@@ -152,7 +152,7 @@ const effectHandlers = {
         })
     },
     async: async ({ method, url, success, error }) => {
-        fetch(url, { method })
+        return fetch(url, { method })
             .then(response => response.json())
             .then(success)
             .catch(error)
@@ -175,10 +175,10 @@ EventStream$.subscribe(([eventName, eventData]) => {
     const [event, context] = putThroughInterceptorPipeline([eventName, eventData], {}, "in");
 
     // handle the event to produce side-effects
-    const effects = context.eventHandler.handler(context.selectedPaths, eventData);
+    const effects_ = context.eventHandler.handler(context.selectedPaths, eventData);
 
     // run through OUT interceptors
-    putThroughInterceptorPipeline(event, { ...context, effects }, "out");
+    const [_, { effects }] = putThroughInterceptorPipeline(event, { ...context, effects: effects_ }, "out");
 
     // run effect handler
     EffectStream$.next(effects);
@@ -269,3 +269,49 @@ registerInterceptor({
         return [event, context];
     }
 });
+
+/////////////////// throttle interceptor ////////////////////////////////////////
+const throttledStream = new Subject();
+const intoThrottledStream = (effects) => {
+    // TODO(Diego): Maybe allow to add a delay between each?
+    throttledStream.next(effects);
+};
+
+const runEffects = async (effects) => {
+    const effectsArray = Object.entries(effects);
+    for (let i = 0; i < effectsArray.length; ++i) {
+        const [effectType, sideEffects] = effectsArray[i];
+        const effectHandler = effectHandlers[effectType];
+        await effectHandler(sideEffects);
+    }
+};
+
+throttledStream
+    .pipe(concatMap(async (effects) => of(await runEffects(effects))))
+    .subscribe(
+        async (effects) => {
+            console.log("effects ran", effects);
+        },
+        async (error) => {
+            // TODO(Diego): test error handling here
+            console.log("error occurred", error);
+        },
+        async (complete) => {
+            // NOTE: Probably don't need to do anything here
+            console.log("completed!", complete);
+        }
+    );
+
+registerInterceptor({
+    name: 'throttle-event',
+    order: 1,
+    type: 'out',
+    interceptor: (event, context) => {
+        if (context.eventHandler.throttled) {
+            intoThrottledStream(context.effects);
+            return [event, { effects: [] }];
+        }
+        return [event, context];
+    }
+})
+//////////////////// end throttled interceptor ///////////////////////////////////
