@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef } from "react";
-import { Subject, of, interval, Observable } from "rxjs";
-import { filter, throttle, throttleTime, concatMap } from "rxjs/operators";
+import { Subject, of } from "rxjs";
+import { filter, concatMap } from "rxjs/operators";
 import assert from 'assert';
 
 import { updateIn, getIn, arrayPartialEQ, normalize, any } from "./operators";
